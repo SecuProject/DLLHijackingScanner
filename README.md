@@ -1,6 +1,6 @@
 # UAC bypass - DLL hijacking 
 
-This is a PoC for bypassing UAC using DLL hijacking and abusing the "Trusted Directories" verification. 
+This is a PoC for bypassing [UAC](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/how-user-account-control-works) using [DLL hijacking](https://attack.mitre.org/techniques/T1574/001/) and abusing the "Trusted Directories" verification. 
 
 ## Summary
 
