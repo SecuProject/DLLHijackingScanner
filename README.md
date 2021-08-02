@@ -1,34 +1,38 @@
 # UAC bypass - DLL hijacking 
 
+## Description
+
 This is a PoC for bypassing [UAC](https://docs.microsoft.com/en-us/windows/security/identity-protection/user-account-control/how-user-account-control-works) using [DLL hijacking](https://attack.mitre.org/techniques/T1574/001/) and abusing the "Trusted Directories" verification. 
 
 ## Summary
 
 - [Generate Header from CSV](#generate-header-from-csv)
-- [Generate the list of vulnerable PE](#generate-the-list-of-vulnerable-pe)
+    - [Arguments](#arguments)
+- [Generate the list of vulnerable PE and DLL](#generate-the-list-of-vulnerable-pe-and-dll)
     - [DLLHijacking.exe](#dllhijackingexe)
     - [Log file](#log-file)
-    - [Command](#command)
+    - [Execution](#execution)
     - [Result](#result)
 - [test.dll](#testdll)
+- [Sources](#sources)
 
 ## Generate Header from CSV
 
 The python script `CsvToHeader.py` can be used to generate a header file. By default it will use the CSV file `dll_hijacking_candidates.csv` that can be found here: [dll_hijacking_candidates.csv](https://raw.githubusercontent.com/wietze/windows-dll-hijacking/master/dll_hijacking_candidates.csv).
 
-The script will check for each portable executable(PE) the following:
-- If the the PE exist under the file system
-- In the manifest if the requestedExecutionLevel is set to one of the following values: 
+The script will check for each portable executable(PE) the following condition:
+- If the PE exists in the file system.
+- In the manifest of the PE, if the _requestedExecutionLevel_ is set to one of the following values: 
   - `asInvoker`
   - `highestAvailable` 
   - `requireAdministrator`
-- In the manifest if the autoElevate is set to "true":
+- In the manifest if the autoElevate is set to true:
     ```xml
     <autoElevate>true</autoElevate>
     ```
-- If the user specified the `-c` argument, the script will check if the DLL to hijack is in the list of DLLs imported by the PE table.
+- If the user specified the `-c` argument, the script will check if the DLL to hijack is in the list of DLLs imported form PE table.
 
-The help message of the script can be seen by running **CsvToHeader.py -h**:
+### Arguments 
 
 ```
 > python .\CsvToHeader.py -h
@@ -58,26 +62,26 @@ DLLHijacking.exe is the file that will be used to generate the list of vulnerabl
 It will perform the following steps:
 1. CreateFakeDirectory 
    
-    The `CreateFakeDirectory` function will create a directory in `C:\windows \system32`.
+    Function that create a directory in `C:\windows \system32`.
 
 2. Copy Files in the new directory
-     - form `C:\windows\system32\[TARGET.EXE]` to `C:\windows \system32\[TARGET.EXE]`
-     - form `[CUSTOM_DLL_PATH]` to `C:\windows \system32\[TARGET.DLL]`
+     - from `C:\windows\system32\[TARGET.EXE]` to `C:\windows \system32\[TARGET.EXE]`
+     - from `[CUSTOM_DLL_PATH]` to `C:\windows \system32\[TARGET.DLL]`
 3. Trigger
    
-   Run the executable from `C:\windows \system32\[TARGET].exe`
+   Run the executable from `C:\windows \system32\[TARGET.EXE]`
 
 4. CleanUpFakeDirectory
 
-    The `CleanUpFakeDirectory` function will delete the directory created in step 1 and files form step 2.
+    Function that delete the directory created in step 1 and files from step 2.
 5. CheckExploit
 
-    Check the contain of the file `C:\ProgramData\exploit.txt` to see if the exploit was successful.
+    Check the content of the file `C:\ProgramData\exploit.txt` to see if the exploit was successful.
 
 ### Log file
 
-DLLHijacking.exe will always generate a file log file `exploitable.log` with the following content:
-- 0 or 1 to indicate if the exploit was successful.
+DLLHijacking.exe will always generate a log file `exploitable.log` with the following content:
+- 0 or 1 to indicates whether the exploit was able to bypass the UAC.
 - The executable name
 - The dll name
   
@@ -87,17 +91,17 @@ E.g.
 0,computerdefaults.exe,Secur32.dll
 ```
 
-### Command
+### Execution 
 
 Command to run:
 
     DLLHijacking.exe [DLL_PATH]
 
-if no argument is passed, the script will use the current path and the file `test.dll`.
+if no argument is passed, the script will use the DLL `test.dll` which is stored in the resouce of `DLLHijacking.exe`.
 
 ### Result
 
-Tested on Windows 10 Pro version (10.0.19043 N/A Build 19043).
+Tested on Windows 10 Pro (10.0.19043 N/A Build 19043).
 
 ![ExploitResult](ExploitResult.png)
 
@@ -105,14 +109,13 @@ Tested on Windows 10 Pro version (10.0.19043 N/A Build 19043).
 
 `test.dll` is a simple dynamic library that will be use to see if the exploit is successfully.
 The DLL will create a file `C:\ProgramData\exploit.txt` with the following content:
-- 0 or 1 to indicate if the exploit was successful.
+- 0 or 1 to indicates whether the exploit was able to bypass the UAC.
 - The executable name
 - The DLL name
 
-This file will be removed after the exploit is completed.
+This file will be deleted once the exploit is complete.
 
-
-## Source:
+## Sources:
 
 - https://www.wietzebeukema.nl/blog/hijacking-dlls-in-windows
 - https://github.com/wietze/windows-dll-hijacking/
@@ -122,4 +125,6 @@ This file will be removed after the exploit is completed.
 
 ## Legal Disclaimer:
 
-    This project is made for educational and ethical testing purposes only. Usage of this software for attacking targets without prior mutual consent is illegal. It is the end user's responsibility to obey all applicable local, state and federal laws. Developers assume no liability and are not responsible for any misuse or damage caused by this program.
+    This project is made for educational and ethical testing purposes only. Usage of this software for attacking targets without prior mutual consent is illegal. 
+    It is the end user's responsibility to obey all applicable local, state and federal laws. 
+    Developers assume no liability and are not responsible for any misuse or damage caused by this program.
